@@ -1,5 +1,7 @@
 """
+#本源码遵循GPLv2#   #follow GPLv2
 创芯科技产品CAN盒子的二次开发方式（python语言）有两种：
+www.zhcxgd.com
     1.使用其提供的ControlCAN.dll文件（使用方法见ControlCAN.dll接口函数库（二次开发库）使用说明书.pdf）
     2.使用python库python-can
 
@@ -16,7 +18,7 @@ print("into ")
 from time import sleep
 from lib_for_main import *
 
-canbox_device=CAN_BOX()
+canbox_device=CAN_BOX() #创建CAN 盒子对象
 
 def power_up():
     send_canframe_id="0x600"
