@@ -157,11 +157,11 @@ class CAN_BOX():
         can_frame_data_array = ubyte_array(0,0,0,0, 0, 0, 0, 0) #发送帧数据数组初始化
 
         send_canframe_id=int(send_canframe_id,16)
-        send_canframe_data=send_canframe_data.split(",")    #字符串转列表，分隔符检测使用“,”符号
+        send_canframe_data_list=send_canframe_data.split(",")    #字符串转字符串列表，分隔符检测使用“,”符号
 
 
-        for one_byte_data in send_canframe_data:    #发送帧数据数组内容替换填充
-            can_frame_data_array[send_canframe_data.index(one_byte_data)]=int(str(one_byte_data),16)    #数组内容填充为要发送的内容，且将传入参数的十六进制转换为十进制发送
+        for byte_data_index in range(0,len(send_canframe_data_list)):    #发送帧数据数组内容替换填充
+            can_frame_data_array[byte_data_index]=int(send_canframe_data_list[byte_data_index],16)    #数组内容填充为要发送的内容，且将传入参数的十六进制转换为十进制发送
         print("send:",send_canframe_id," data: " ,list(can_frame_data_array))  #显示将发送的帧数据
         
         if(send_canframe_dlc>-1):   #判断是否自动计算send_canframe_dlc
@@ -194,14 +194,14 @@ class CAN_BOX():
             print(channel_index,'通道发送失败')
             return is_send_successful
 
-    def receive_can_frame(self,lock_flag=0,can_box_channel_index=-1):
+    def receive_can_frame(self,block_flag=0,can_box_channel_index=-1):
         #【待优化 大端模式←→小端模式】
         #【待优化 十六进制模式←→十进制模式】
         #程序流程：读取缓冲区内待接收的帧数量→构建缓冲区内帧数量的容器（帧数组）→读取缓冲区内所有帧数据并存放到容器（帧数组）中→依次打印所有帧数据→返回容器（帧数组）
         
         frames_count=(self.ControlCAN_dll).VCI_GetReceiveNum(self.VCI_USBCAN2,0,1)     #缓冲区帧数计数，同时也是接收标志位
         print("接收到",frames_count,"帧数据")
-        if lock_flag==1:    #堵塞模式判断，堵塞模式标志位为1则为堵塞模式
+        if block_flag==1:    #堵塞模式判断，堵塞模式标志位为1则为堵塞模式
             while((frames_count)==0):   #堵塞模式，一直查询缓冲区中是否有接收到的帧计数，直到接收到数据
                 frames_count=(self.ControlCAN_dll).VCI_GetReceiveNum(self.VCI_USBCAN2,0,1)     #缓冲区帧数计数更新，同时也是接收标志位
 

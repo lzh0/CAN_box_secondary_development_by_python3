@@ -16,8 +16,8 @@ v0:windows平台下32/64位python解释器的基本CAN盒子配置、CAN帧收�
 指定通道
 
 """
-print("into ")
 from time import sleep
+from urllib.parse import uses_fragment
 from lib_for_main import *
 
 canbox_device=CAN_BOX() #创建CAN 盒子对象
@@ -83,14 +83,27 @@ def motion_velocity_init_config(node_id=0x00,max_speed=2000,max_acce=2000,max_de
     canbox_device.send_can_frame(2,SDO_camframe_id,send_canframe_data,send_canframe_dlc=8)
     
 
-def motion_velocity_set_speed(change_speed_DEC=0):
-    if(change_speed_DEC<0):change_speed_DEC=0   #目前不支持负速度反转   #注意如果没有负数检测，输入负数会导致速度调整为最大
+def motion_velocity_set_speed(set_speed=0):
+    #CAN_id 合成
     SDO_ask_cob_id=0x600
     SDO_camframe_id=hex(SDO_ask_cob_id+node_id) #//注意hex()函数返回的是字符串类型
-    SDO_write_CS="22, "   #0x0022 DEFSTRUCT SDO Parameter  
-    change_speed_DEC=hex(change_speed_DEC&0xff)+', '+hex(change_speed_DEC&0xff00)[:-2]   #[:-2]删去字符串最后两位
-    send_canframe_data=SDO_write_CS+"FF, 60, 00, "+change_speed_DEC+", 00, 00"   #//急停速度限制
+
+    #CAN_data 合成
+    SDO_write_CS="22, "   #0x0022 DEFSTRUCT SDO Parameter  can_frame.data[0]
+    object_dictionary_Target_velocity_index="FF, 60, "   #can_frame.data[1][2]    #字典对象 0x60FF: 名称：目标速度 Target velocity 0x60FF Sets velocity reference for velocity profiler. 访问R/W 、可映射?Y 、Data type：INTEGER32、Category：Mandatory
+    set_speed_hex_strings=""
     
+    if(set_speed<0):    #速度方向判断，正数正转，负数反转
+        #负数反转处理
+        set_speed=(4294967295+set_speed)+1#ff ff ff ff  4294967295    #ff ff ff ff==-1
+        
+    for i in range(4):  #以下为十进制转十六进制，再转小端模式的转换
+        set_speed_value_byte=hex((set_speed>>i*8)&0xff) #右移i个字节再按位取AND，即可得到每个字节值
+        set_speed_hex_strings=set_speed_hex_strings+', '+set_speed_value_byte   #按小端的字节顺序排序
+
+    send_canframe_data=SDO_write_CS+object_dictionary_Target_velocity_index+"00"+set_speed_hex_strings   #//速度设置共计4个字节  #小端模式从左到右，依次为速度的高位到低位
+    
+    #CAN帧发送
     canbox_device.send_can_frame(2,SDO_camframe_id,send_canframe_data,send_canframe_dlc=8)
     pass
 
@@ -111,26 +124,25 @@ if __name__ == "__main__":
 
     sleep(0.001)    #//1ms
     
-                 # 22 60 60 00 03 00 00 00
-    #00 00 06 02 # 22 ff 60 00 f0 00 00 00
-    motion_velocity_init_config(node_id=2)
+
+    motion_velocity_init_config(node_id=2)  #//设置为速度模式
     canbox_device.receive_can_frame(); 
 
     while(1):
         ctrl_order=input("控制指令：")
-        if(ctrl_order=="off"):power_down()
-        if(ctrl_order=="on"):power_up()
-        if(ctrl_order.isdigit()):   #如果全为数字
+        if(ctrl_order==""):print("ctrl_order is empty") #无输入情况
+        elif(ctrl_order=="off"):power_down()
+        elif(ctrl_order=="on"):power_up()
+        elif(ctrl_order[0]=="+" or ctrl_order[0]=="-"):   #速度设置指令检测 #ctrl_order.isdigit()#判断字符串内是否全为数字
+            #除第一位外全为数字,则调节速度
             motion_velocity_set_speed(int(ctrl_order))  #input(是堵塞的所以不用加延时)
-            canbox_device.receive_can_frame(); 
-        
-        '''
-        power_down()
-        sleep(3)
-        power_up()
-        sleep(3)
-       '''
-        pass
+            
+        else:#直接发送帧数据
+            #usage:602#22,40,60,00,06,00,00,00  #电机失能
+            send_canframe=ctrl_order.split("#")
+            canbox_device.send_can_frame(2,send_canframe[0],send_canframe[1],send_canframe_dlc=8)
 
-    
+        canbox_device.receive_can_frame();  #//接收帧数据
+
+    #while(1)结束
     print("__main___end")
