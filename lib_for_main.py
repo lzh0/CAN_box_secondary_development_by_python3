@@ -194,7 +194,7 @@ class CAN_BOX():
             print(channel_index,'通道发送失败')
             return is_send_successful
 
-    def receive_can_frame(self,lock_flag=1,can_box_channel_index=-1):
+    def receive_can_frame(self,lock_flag=0,can_box_channel_index=-1):
         #【待优化 大端模式←→小端模式】
         #【待优化 十六进制模式←→十进制模式】
         #程序流程：读取缓冲区内待接收的帧数量→构建缓冲区内帧数量的容器（帧数组）→读取缓冲区内所有帧数据并存放到容器（帧数组）中→依次打印所有帧数据→返回容器（帧数组）
