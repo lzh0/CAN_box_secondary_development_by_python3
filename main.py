@@ -22,11 +22,10 @@ from lib_for_main import *
 
 canbox_device=CAN_BOX() #创建CAN 盒子对象
 
-SDO_ask_cob_id=0x600
-node_id=0x2
-SDO_camframe_id=str(hex(SDO_ask_cob_id+node_id))
+
 
 def power_up():
+
     send_canframe_id="0x600"
     send_canframe_data="22, 40, 60, 00, 80, 00, 00, 00" #清除错误
     canbox_device.send_can_frame(2,send_canframe_id,send_canframe_data,send_canframe_dlc=-1)
@@ -60,7 +59,7 @@ def power_down():
 
     pass
 
-def motion_velocity_init_config(node_id=0x00,max_speed=2000,max_acce=2000,max_dece=2000):
+def motion_velocity_mode_init_config(node_id=0x00,max_speed=2000,max_acce=2000,max_dece=2000):  #驱动器驱动方式：速度模式——初始化
     SDO_ask_cob_id=0x600
     SDO_camframe_id=hex(SDO_ask_cob_id+node_id) #//注意hex()函数返回的是字符串类型
     SDO_write_CS="22, "   #0x0022 DEFSTRUCT SDO Parameter  
@@ -83,7 +82,7 @@ def motion_velocity_init_config(node_id=0x00,max_speed=2000,max_acce=2000,max_de
     canbox_device.send_can_frame(2,SDO_camframe_id,send_canframe_data,send_canframe_dlc=8)
     
 
-def motion_velocity_set_speed(set_speed=0):
+def motion_velocity_mode_set_speed(node_id=0x00,set_speed=0): #驱动器驱动方式：速度模式——更改当前电机速度
     #CAN_id 合成
     SDO_ask_cob_id=0x600
     SDO_camframe_id=hex(SDO_ask_cob_id+node_id) #//注意hex()函数返回的是字符串类型
@@ -105,8 +104,11 @@ def motion_velocity_set_speed(set_speed=0):
     
     #CAN帧发送
     canbox_device.send_can_frame(2,SDO_camframe_id,send_canframe_data,send_canframe_dlc=8)
-    pass
 
+
+def motion_position_mode_init_config(node_id=0x00,): #驱动器驱动方式：位置模式——初始化
+
+    pass
 
 if __name__ == "__main__":
 
@@ -125,7 +127,7 @@ if __name__ == "__main__":
     sleep(0.001)    #//1ms
     
 
-    motion_velocity_init_config(node_id=2)  #//设置为速度模式
+    motion_velocity_mode_init_config(node_id=0x2)  #//设置为速度模式
     canbox_device.receive_can_frame(); 
 
     while(1):
@@ -135,12 +137,12 @@ if __name__ == "__main__":
         elif(ctrl_order=="on"):power_up()
         elif(ctrl_order[0]=="+" or ctrl_order[0]=="-"):   #速度设置指令检测 #ctrl_order.isdigit()#判断字符串内是否全为数字
             #除第一位外全为数字,则调节速度
-            motion_velocity_set_speed(int(ctrl_order))  #input(是堵塞的所以不用加延时)
+            motion_velocity_mode_set_speed(2,int(ctrl_order))  #input(是堵塞的所以不用加延时)
             
         else:#直接发送帧数据
             #usage:602#22,40,60,00,06,00,00,00  #电机失能
             send_canframe=ctrl_order.split("#")
-            canbox_device.send_can_frame(2,send_canframe[0],send_canframe[1],send_canframe_dlc=8)
+            canbox_device.send_can_frame(0x2,send_canframe[0],send_canframe[1],send_canframe_dlc=8)
 
         canbox_device.receive_can_frame();  #//接收帧数据
 
