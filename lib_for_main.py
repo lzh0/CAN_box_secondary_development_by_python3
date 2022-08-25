@@ -162,7 +162,7 @@ class CAN_BOX():
 
         for byte_data_index in range(0,len(send_canframe_data_list)):    #发送帧数据数组内容替换填充
             can_frame_data_array[byte_data_index]=int(send_canframe_data_list[byte_data_index],16)    #数组内容填充为要发送的内容，且将传入参数的十六进制转换为十进制发送
-        print("send:",send_canframe_id," data: " ,list(can_frame_data_array))  #显示将发送的帧数据
+        print("send:",send_canframe_id," data: " ,list(can_frame_data_array),end="  ")  #显示将发送的帧数据
         
         if(send_canframe_dlc>-1):   #判断是否自动计算send_canframe_dlc
             #手动输入send_canframe_dlc模式
@@ -238,21 +238,12 @@ class CAN_BOX():
     def print_can_frame(self,can_frame_object:object,num_system="hex"):
         """
         #【待优化：1.根据canframe.dlc显示指定范围的内容 2.不同通道显示CAN1、CAN2】
-        e.g.:
-        【优化前：】
-        CAN2通道接收成功，帧内容如下：
-        canframe.id: 0x702 canframe.dlc: 0x1 canframe.data: ['00', '00', '00', '00', '00', '00', '00', '00']
-        【优化后：】
-        CAN2通道接收成功，帧内容如下：
-        canframe.id: 0x702 canframe.dlc: 0x1 canframe.data: ['00']
+        #现在的CAN2通道接...简直自欺欺人
         
-        canframe_id=can_frame_object.ID
-        canframe_dlc=can_frame_object.DataLen
-        canframe_data=can_frame_object.Data
         """
 
         if(num_system=="hex"):  #十六进制
-            print('CAN2通道接收成功，帧内容如下：')
+            print('CAN2通道接收成功，帧内容如下：',end=" ") #不换行打印
             print(#打印获取到的帧内容
                 #"can_device_channel:",channel  #数据来自于 CAN 盒子通道 【1或2】
                 "canframe.id:",hex(int(can_frame_object.ID)),    #帧ID
@@ -262,7 +253,7 @@ class CAN_BOX():
             return
 
         if(num_system=="dec"):  #十进制
-            print('CAN2通道接收成功，帧内容如下：')
+            print('CAN2通道接收成功，帧内容如下：',end=" ") #不换行打印
             print(#打印获取到的帧内容
                 #"can_device_channel:",channel  #数据来自于 CAN 盒子通道 【1或2】
                 "canframe.id:",can_frame_object.ID,    #帧ID
