@@ -17,6 +17,7 @@ v0:windows平台下32/64位python解释器的基本CAN盒子配置、CAN帧收�
 
 """
 
+from time import sleep
 from lib_for_main import *
 
 canbox_device=CAN_BOX() #创建CAN 盒子对象
@@ -85,7 +86,7 @@ def motion_velocity_mode_init_config(node_id=0x00,max_speed=2000,max_acce=2000,m
     canbox_device.send_can_frame(2,SDO_camframe_id,send_canframe_data,send_canframe_dlc=8)
     
 
-def motion_velocity_mode_set_speed(node_id=0x00,set_speed=0): #驱动器驱动方式：速度模式——更改当前电机速度
+def motion_velocity_mode_set_speed(node_id=0x00,set_speed=0): #驱动器驱动方式：速度模式——更改当前电机速度   单位是Cnts/s(counts/s) 不是RPM 
     #CAN_id 合成
     SDO_ask_cob_id=0x600
     SDO_camframe_id=hex(SDO_ask_cob_id+node_id) #//注意hex()函数返回的是字符串类型
@@ -99,7 +100,7 @@ def motion_velocity_mode_set_speed(node_id=0x00,set_speed=0): #驱动器驱动�
         #负数反转处理
         set_speed=(4294967295+set_speed)+1#ff ff ff ff  4294967295    #ff ff ff ff==-1
         
-    for i in range(4):  #以下为十进制转十六进制，再转小端模式的转换
+    for i in range(4):  #以下为十进制转十六进制，再转小端模式的转换 【这个可以单独抽出来成为一个函数（和上面的负数处理一起】
         set_speed_value_byte=hex((set_speed>>i*8)&0xff) #右移i个字节再按位取AND，即可得到每个字节值
         set_speed_hex_strings=set_speed_hex_strings+', '+set_speed_value_byte   #按小端的字节顺序排序
 
@@ -107,8 +108,7 @@ def motion_velocity_mode_set_speed(node_id=0x00,set_speed=0): #驱动器驱动�
     
     #CAN帧发送
     canbox_device.send_can_frame(2,SDO_camframe_id,send_canframe_data,send_canframe_dlc=8)
-    #canbox_device.receive_can_frame()
-
+    
 
 def motion_position_mode_init_config(node_id=0x00,move_to_position=0,max_speed=2000,accleration=2000): #驱动器驱动方式：位置模式——初始化
     #注意位置模式第一次运行时会花时间自动找零（低转速转很多圈，然后自动停止
@@ -203,13 +203,7 @@ def motion_position_mode_set_position(node_id=0x00,set_position=0): #驱动器�
     canbox_device.send_can_frame(2,SDO_camframe_id,send_canframe_data,send_canframe_dlc=-1)
 
 
-# /*
-# 	函数输出：无
-# 	函数功能：控制驱动器命令电机输出力矩
-# 	函数输入：数字[0-4],力矩大小[-1000-1000]
-# */
-
-def motion_profiled_torque_mode_init_config(node_id=0x00,): #驱动器驱动方式：位置模式——初始化
+def motion_profiled_torque_mode_init_config(node_id=0x00,): #驱动器驱动方式：力矩模式——初始化
     #【提问：不同运动模式之间能同时存在吗？
     '''
     #用到的指令总览：
@@ -232,7 +226,8 @@ def motion_profiled_torque_mode_init_config(node_id=0x00,): #驱动器驱动方�
     
 
 def motion_profiled_torque_mode_set_torque(node_id=0x00,set_torque=0): #驱动器驱动方式：速度模式——更改当前电机速度
-    #位置范围[--]60*81=4860=0x1248  #实际上远比这个大...四个字节..
+    #函数功能：控制驱动器命令电机输出力矩
+    #函数输入：节点ID, 力矩大小[-1000-1000]
     #CAN_id 合成
     SDO_ask_cob_id=0x600
     SDO_camframe_id=hex(SDO_ask_cob_id+node_id) #//注意hex()函数返回的是字符串类型
@@ -261,7 +256,6 @@ def motion_profiled_torque_mode_set_torque(node_id=0x00,set_torque=0): #驱动�
 
 if __name__ == "__main__":
 
-    #sleep(0.001)    #//1ms  #
 
     running_mode=""
     canbox_device.receive_can_frame(); 
@@ -309,7 +303,7 @@ if __name__ == "__main__":
             print("undefind未定义指令，请检查")
 
             
-
+        sleep(0.01)    #//10ms  #
         canbox_device.receive_can_frame();  #//接收帧数据
 
     #while(1)结束

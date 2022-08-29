@@ -7,29 +7,24 @@
 
 .多旋钮（电机）联动随动
 '''
-from time import sleep
-from lib_for_main import *
+class bcolors:
+    OK = '\033[92m' #GREEN
+    WARNING = '\033[93m' #YELLOW
+    FAIL = '\033[91m' #RED
+    RESET = '\033[0m' #RESET COLOR
 
-canbox_device=CAN_BOX() #创建CAN 盒子对象
+print(bcolors.OK + "File Saved Successfully!" + bcolors.RESET)
+print(bcolors.WARNING + "Warning: Are you sure you want to continue?" + bcolors.RESET)
+print(bcolors.FAIL + "Unable to delete record." + bcolors.RESET)
+
+
+print(f"{bcolors.OK}File Saved Successfully!{bcolors.RESET}")
+print(f"{bcolors.WARNING}Warning: Are you sure you want to continue?{bcolors.RESET}")
+print(f"{bcolors.FAIL}Unable to delete record.{bcolors.RESET}")
 
 
 
-
-
-
-
-if __name__ == "__main__":
+#if __name__ == "__main__":
 
     
-    running_mode=""
-    power_up()
-    canbox_device.receive_can_frame(); 
-    motion_position_mode_init_config(node_id=2)
-    canbox_device.receive_can_frame(); 
-
-    while(1):
-        ctrl_order=input()
-        motion_position_mode_set_position(2,int(ctrl_order));print("set position",ctrl_order)#平滑位置模式
-    
-
     
