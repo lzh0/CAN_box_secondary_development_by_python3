@@ -204,7 +204,7 @@ def motion_position_mode_set_position(node_id=0x00,set_position=0): #驱动器�
 
 
 def motion_profiled_torque_mode_init_config(node_id=0x00,): #驱动器驱动方式：力矩模式——初始化
-    #【提问：不同运动模式之间能同时存在吗？
+    #【注意：不同运动模式之间不能同时存在】
     '''
     #用到的指令总览：
     602#22,60,60,00,04,00,00,00 //设置力矩模式  Profiled torque mode
