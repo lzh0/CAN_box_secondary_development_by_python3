@@ -145,6 +145,10 @@ class CAN_BOX():
         else:
             print('调用 VCI_StartCAN2 出错\r\n')
 
+    # 函数名：self.send_can_frame()
+    #功能：发送CAN帧数据
+    # 参数说明：
+    #       channel_index：0或1，channel_index=0对应CAN盒子上的CAN1，channel_index=1对应CAN盒子上的CAN2
     def send_can_frame(self,channel_index,send_canframe_id:string,send_canframe_data:string,send_canframe_dlc=-1): #帧发送
         #【待优化 大端模式←→小端模式】
         #【待优化 十六进制模式←→十进制模式】
@@ -194,23 +198,39 @@ class CAN_BOX():
             print(channel_index,'通道发送失败')
             return is_send_successful
 
-    def receive_can_frame(self,block_flag=0,can_box_channel_index=-1):
+    # 函数名：self.receive_can_frame
+    #功能：发送CAN帧数据
+    # 参数说明：
+    #       block_flag：是否堵塞模式标志位，为1则为堵塞模式，为0则仅执行一次缓冲区帧数检测后继续执行（不堵塞）
+    #       can_box_channel_index：0或1，channel_index=0对应CAN盒子上的CAN1，channel_index=1对应CAN盒子上的CAN2
+    def receive_can_frame(self,block_flag=0,can_box_channel_index=0):   #帧发送，默认不堵塞，读取CAN盒子上的通道1
         #【待优化 大端模式←→小端模式】
         #【待优化 十六进制模式←→十进制模式】
         #程序流程：读取缓冲区内待接收的帧数量→构建缓冲区内帧数量的容器（帧数组）→读取缓冲区内所有帧数据并存放到容器（帧数组）中→依次打印所有帧数据→返回容器（帧数组）
         
-        frames_count=(self.ControlCAN_dll).VCI_GetReceiveNum(self.VCI_USBCAN2,0,1)     #缓冲区帧数计数，同时也是接收标志位
+        frames_count=(self.ControlCAN_dll).VCI_GetReceiveNum(self.VCI_USBCAN2,0,can_box_channel_index)     #缓冲区帧数计数，同时也是接收标志位
+        # VCI_GetReceiveNum函数说明：
+        # 功能：获取指定CAN通道的接收缓冲区中，接收到但尚未被读取的帧数量。主要用途是配合VCI_Receive使用，即缓冲区有数据，再接收。
+        # 原型：DWORD __stdcall VCI_GetReceiveNum(DWORD DevType,DWORD DevIndex,DWORD CANIndex);
+        # 参数：
+        #     DevType：设备类型。对应不同的产品型号详见：适配器设备类型定义。
+        #     DevIndex：设备索引，比如当只有一个USB-CAN适配器时，索引号为0，这时再插入一个USB-CAN适配器那么后面插入的这个设备索引号就是1，以此类推。
+        #     CANIndex：CAN通道索引。第几路 CAN。即对应卡的CAN通道号，CAN1为0，CAN2为1。
+        # 返回值：返回尚未被读取的帧数，=-1表示USB-CAN设备不存在或USB掉线。
+
+
+
         print("接收到",frames_count,"帧数据")
         if block_flag==1:    #堵塞模式判断，堵塞模式标志位为1则为堵塞模式
             while((frames_count)==0):   #堵塞模式，一直查询缓冲区中是否有接收到的帧计数，直到接收到数据
-                frames_count=(self.ControlCAN_dll).VCI_GetReceiveNum(self.VCI_USBCAN2,0,1)     #缓冲区帧数计数更新，同时也是接收标志位
+                frames_count=(self.ControlCAN_dll).VCI_GetReceiveNum(self.VCI_USBCAN2,0,can_box_channel_index)     #缓冲区帧数计数更新，同时也是接收标志位
 
         if(frames_count>0): #判断缓冲区中帧计数是否大于0，即是否有帧数据
             #有帧数据的情况，则读取
             can_frme_data = self.ubyte_array_8(0, 0, 0, 0, 0, 0, 0, 0)    ##赋初值0
             can_frame_object = VCI_CAN_OBJ(0, 0, 0, 1, 0, 0, 8, can_frme_data, self.Reserved_3)  #构造帧结构体
             can_frame_object_array=VCI_CAN_OBJ_ARRAY(frames_count)   #构造帧结构体数组，用来接收复数的帧数据
-            (self.ControlCAN_dll).VCI_Receive(self.VCI_USBCAN2, 0, 1, byref(can_frame_object_array.ADDR), frames_count, 0)    #获取缓冲区中所有接收到的CAN帧，执行后会清空接收缓冲区，每个通道缓冲区中最多放2000帧左右
+            (self.ControlCAN_dll).VCI_Receive(self.VCI_USBCAN2, 0, can_box_channel_index, byref(can_frame_object_array.ADDR), frames_count, 0)    #获取缓冲区中所有接收到的CAN帧，执行后会清空接收缓冲区，每个通道缓冲区中最多放2000帧左右
                 
                 # VCI_USB_CAN_2: 设备类型
                 # DEV_INDEX:     设备索引
