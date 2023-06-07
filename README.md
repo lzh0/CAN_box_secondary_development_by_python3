@@ -4,3 +4,5 @@
 CHUANGXIN TECONOLOGY's product: CAN box secondary development by python3
 
 #项目状态：持续更新中（updating）
+#项目地址：https://github.com/lzh0/CAN_box_secondary_development_by_python3
+#仓库地址：https://github.com/lzh0/CAN_box_secondary_development_by_python3.git

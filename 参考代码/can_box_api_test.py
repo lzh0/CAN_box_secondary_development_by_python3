@@ -36,6 +36,7 @@ class VCI_CAN_OBJ(Structure):
 
 def load_dll_file():
     CanDLLName = './ControlCAN_x64.dll' #把DLL放到对应的目录下
+    CanDLLName = '.\\dll\\windows\\ControlCAN_x64.dll'
     global canDLL 
     canDLL= windll.LoadLibrary(CanDLLName)
     #Linux系统下使用下面语句，编译命令：python3 python3.8.0.py
